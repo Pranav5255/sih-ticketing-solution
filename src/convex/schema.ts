@@ -16,28 +16,111 @@ export const roleValidator = v.union(
 );
 export type Role = Infer<typeof roleValidator>;
 
+// Ticket source types
+export const TICKET_SOURCES = {
+  CHATBOT: "chatbot",
+  EMAIL: "email",
+  GLPI: "glpi",
+  SOLMAN: "solman",
+} as const;
+
+export const ticketSourceValidator = v.union(
+  v.literal(TICKET_SOURCES.CHATBOT),
+  v.literal(TICKET_SOURCES.EMAIL),
+  v.literal(TICKET_SOURCES.GLPI),
+  v.literal(TICKET_SOURCES.SOLMAN),
+);
+
+// Ticket status types
+export const TICKET_STATUS = {
+  OPEN: "open",
+  ASSIGNED: "assigned",
+  RESOLVED: "resolved",
+  CLOSED: "closed",
+} as const;
+
+export const ticketStatusValidator = v.union(
+  v.literal(TICKET_STATUS.OPEN),
+  v.literal(TICKET_STATUS.ASSIGNED),
+  v.literal(TICKET_STATUS.RESOLVED),
+  v.literal(TICKET_STATUS.CLOSED),
+);
+
+// Ticket priority types
+export const TICKET_PRIORITY = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  CRITICAL: "critical",
+} as const;
+
+export const ticketPriorityValidator = v.union(
+  v.literal(TICKET_PRIORITY.LOW),
+  v.literal(TICKET_PRIORITY.MEDIUM),
+  v.literal(TICKET_PRIORITY.HIGH),
+  v.literal(TICKET_PRIORITY.CRITICAL),
+);
+
+// Ticket categories
+export const TICKET_CATEGORIES = {
+  HARDWARE: "Hardware Issues",
+  SOFTWARE: "Software/Application Support",
+  NETWORK: "Network Connectivity",
+  ACCESS: "Access Management",
+  EMAIL: "Email/Communication Tools",
+  OTHER: "Other",
+} as const;
+
 const schema = defineSchema(
   {
     // default auth tables using convex auth.
-    ...authTables, // do not remove or modify
+    ...authTables,
 
-    // the users table is the default users table that is brought in by the authTables
     users: defineTable({
-      name: v.optional(v.string()), // name of the user. do not remove
-      image: v.optional(v.string()), // image of the user. do not remove
-      email: v.optional(v.string()), // email of the user. do not remove
-      emailVerificationTime: v.optional(v.number()), // email verification time. do not remove
-      isAnonymous: v.optional(v.boolean()), // is the user anonymous. do not remove
+      name: v.optional(v.string()),
+      image: v.optional(v.string()),
+      email: v.optional(v.string()),
+      emailVerificationTime: v.optional(v.number()),
+      isAnonymous: v.optional(v.boolean()),
+      role: v.optional(roleValidator),
+      department: v.optional(v.string()),
+      employeeId: v.optional(v.string()),
+    }).index("email", ["email"]),
 
-      role: v.optional(roleValidator), // role of the user. do not remove
-    }).index("email", ["email"]), // index for the email. do not remove or modify
+    tickets: defineTable({
+      source: ticketSourceValidator,
+      userId: v.id("users"),
+      subject: v.string(),
+      description: v.string(),
+      status: ticketStatusValidator,
+      priority: ticketPriorityValidator,
+      category: v.string(),
+      assignedTeam: v.optional(v.string()),
+      resolvedAt: v.optional(v.number()),
+      closedAt: v.optional(v.number()),
+    })
+      .index("by_user", ["userId"])
+      .index("by_status", ["status"])
+      .index("by_priority", ["priority"])
+      .index("by_team", ["assignedTeam"]),
 
-    // add other tables here
+    chatMessages: defineTable({
+      ticketId: v.optional(v.id("tickets")),
+      userId: v.id("users"),
+      message: v.string(),
+      isBot: v.boolean(),
+      intent: v.optional(v.string()),
+      entities: v.optional(v.array(v.string())),
+    })
+      .index("by_ticket", ["ticketId"])
+      .index("by_user", ["userId"]),
 
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    teams: defineTable({
+      name: v.string(),
+      category: v.string(),
+      description: v.string(),
+      email: v.optional(v.string()),
+    }).index("by_category", ["category"]),
   },
   {
     schemaValidation: false,
