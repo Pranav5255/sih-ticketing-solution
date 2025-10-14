@@ -1,41 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
   Ticket,
-  LogOut,
   Loader2,
   Plus,
 } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useEffect } from "react";
 
 export default function Dashboard() {
-  const { isLoading, isAuthenticated, user, signOut } = useAuth();
   const navigate = useNavigate();
   const tickets = useQuery(api.tickets.getUserTickets);
+  const user = useQuery(api.users.currentUser);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate("/auth");
-    }
-  }, [isLoading, isAuthenticated, navigate]);
-
-  if (isLoading) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   const openTickets = tickets?.filter((t) => t.status === "open") || [];
@@ -60,10 +47,6 @@ export default function Dashboard() {
             <span className="text-sm text-muted-foreground">
               {user.email || user.name || "User"}
             </span>
-            <Button variant="outline" onClick={() => signOut()}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
           </div>
         </div>
       </header>

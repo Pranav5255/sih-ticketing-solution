@@ -1,4 +1,3 @@
-import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { Infer, v } from "convex/values";
 
@@ -75,15 +74,10 @@ export const TICKET_CATEGORIES = {
 
 const schema = defineSchema(
   {
-    // default auth tables using convex auth.
-    ...authTables,
-
     users: defineTable({
       name: v.optional(v.string()),
       image: v.optional(v.string()),
       email: v.optional(v.string()),
-      emailVerificationTime: v.optional(v.number()),
-      isAnonymous: v.optional(v.boolean()),
       role: v.optional(roleValidator),
       department: v.optional(v.string()),
       employeeId: v.optional(v.string()),
