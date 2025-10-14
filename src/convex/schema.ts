@@ -35,6 +35,7 @@ export const ticketSourceValidator = v.union(
 export const TICKET_STATUS = {
   OPEN: "open",
   ASSIGNED: "assigned",
+  IN_PROGRESS: "in_progress",
   RESOLVED: "resolved",
   CLOSED: "closed",
 } as const;
@@ -42,6 +43,7 @@ export const TICKET_STATUS = {
 export const ticketStatusValidator = v.union(
   v.literal(TICKET_STATUS.OPEN),
   v.literal(TICKET_STATUS.ASSIGNED),
+  v.literal(TICKET_STATUS.IN_PROGRESS),
   v.literal(TICKET_STATUS.RESOLVED),
   v.literal(TICKET_STATUS.CLOSED),
 );
@@ -90,19 +92,25 @@ const schema = defineSchema(
     tickets: defineTable({
       source: ticketSourceValidator,
       userId: v.id("users"),
+      senderEmail: v.optional(v.string()),
       subject: v.string(),
       description: v.string(),
       status: ticketStatusValidator,
       priority: ticketPriorityValidator,
       category: v.string(),
       assignedTeam: v.optional(v.string()),
+      sentimentScore: v.optional(v.number()),
+      slaDeadline: v.optional(v.number()),
+      resolutionNotes: v.optional(v.string()),
       resolvedAt: v.optional(v.number()),
       closedAt: v.optional(v.number()),
     })
       .index("by_user", ["userId"])
       .index("by_status", ["status"])
       .index("by_priority", ["priority"])
-      .index("by_team", ["assignedTeam"]),
+      .index("by_team", ["assignedTeam"])
+      .index("by_source", ["source"])
+      .index("by_sla", ["slaDeadline"]),
 
     chatMessages: defineTable({
       ticketId: v.optional(v.id("tickets")),
@@ -121,6 +129,23 @@ const schema = defineSchema(
       description: v.string(),
       email: v.optional(v.string()),
     }).index("by_category", ["category"]),
+
+    routingRules: defineTable({
+      category: v.string(),
+      keywords: v.array(v.string()),
+      assignedTeam: v.string(),
+      escalationThreshold: v.number(),
+      slaHours: v.number(),
+    }).index("by_category", ["category"]),
+
+    ticketHistory: defineTable({
+      ticketId: v.id("tickets"),
+      userId: v.id("users"),
+      action: v.string(),
+      oldValue: v.optional(v.string()),
+      newValue: v.optional(v.string()),
+      notes: v.optional(v.string()),
+    }).index("by_ticket", ["ticketId"]),
   },
   {
     schemaValidation: false,

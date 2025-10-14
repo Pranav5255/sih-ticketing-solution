@@ -13,10 +13,13 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as aiProcessing from "../aiProcessing.js";
 import type * as auth_emailOtp from "../auth/emailOtp.js";
 import type * as auth from "../auth.js";
 import type * as chatbot from "../chatbot.js";
+import type * as emailTickets from "../emailTickets.js";
 import type * as http from "../http.js";
+import type * as routingRules from "../routingRules.js";
 import type * as teams from "../teams.js";
 import type * as tickets from "../tickets.js";
 import type * as users from "../users.js";
@@ -30,10 +33,13 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  aiProcessing: typeof aiProcessing;
   "auth/emailOtp": typeof auth_emailOtp;
   auth: typeof auth;
   chatbot: typeof chatbot;
+  emailTickets: typeof emailTickets;
   http: typeof http;
+  routingRules: typeof routingRules;
   teams: typeof teams;
   tickets: typeof tickets;
   users: typeof users;
